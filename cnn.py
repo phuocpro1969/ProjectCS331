@@ -1,9 +1,5 @@
 import os
-import glob
 import numpy as np
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
 
 from pathlib import Path
 from keras import models
@@ -26,48 +22,61 @@ def readData(dataPath):
             labels.append(idx)
     return np.array(labels), np.array(images_data), typeFlowers
 
-def buildModel(x_train, y_train, batch_size=8, epochs=8):
-    if os.path.isfile("model_CNN"):
-        model = models.load_model("model_CNN")
-    else:
-        input_shape = (64, 64, 3)
-        inputs = Input(shape = input_shape)
-        x = inputs
-        x = Conv2D(32, kernel_size=2, activation='relu', strides=1, padding='same')(x)
-        x = MaxPooling2D(pool_size=(2, 2))(x)
+def buildModel(typeFlowers, x_train, y_train, batch_size=8, epochs=8):
+    FILE_MODLE = "model_CNN"
 
-        x = Conv2D(64, kernel_size=2, activation='relu', strides=1, padding='same')(x)
-        x = MaxPooling2D(pool_size=(2, 2))(x)
+    input_shape = (64, 64, 3)
+    inputs = Input(shape = input_shape)
 
-
-        x = Conv2D(128, kernel_size=2, activation='relu', strides=1, padding='same')(x)
-        x = Conv2D(256, kernel_size=2, activation='relu', strides=1, padding='same')(x)
-        x = Dropout(0.25)(x)
-        x = Flatten()(x)
-        outputs = Dense(5,activation='softmax')(x)
-        model = models.Model(inputs, outputs)
-
-        model.summary()
-        model.compile(loss = 'categorical_crossentropy', optimizer = 'adam', metrics = ['accuracy'])
-        model.fit(x_train, y_train, batch_size = batch_size, epochs = epochs)
-        model.save("model_CNN")
+    x = inputs
+    x = Conv2D(32, kernel_size=2, activation='relu', strides=1, padding='same')(x)
+    x = MaxPooling2D(pool_size=(2, 2))(x)
+    x = Conv2D(64, kernel_size=2, activation='relu', strides=1, padding='same')(x)
+    x = MaxPooling2D(pool_size=(2, 2))(x)
+    x = Conv2D(128, kernel_size=2, activation='relu', strides=1, padding='same')(x)
+    x = Conv2D(256, kernel_size=2, activation='relu', strides=1, padding='same')(x)
+    x = Dropout(0.25)(x)
+    x = Flatten()(x)
+    outputs = Dense(len(typeFlowers),activation='softmax')(x)
+    
+    model = models.Model(inputs, outputs)
+    model.compile(loss = 'categorical_crossentropy', optimizer = 'adam', metrics = ['accuracy'])
+    model.summary()
+        
+    model.fit(x_train, y_train, batch_size = batch_size, epochs = epochs)
+    model.save(FILE_MODLE)
+    
     return model
 
-def main():
-    dataPath = "./flowers"
-    labels, images_data, typeFlowers = readData(dataPath=dataPath)
-    
-    x_train, x_test, y_train, y_test = train_test_split(images_data, labels, test_size=0.25)
-    x_train = np.reshape(x_train, [-1, 64, 64, 3])
-    x_test = np.reshape(x_test, [-1, 64, 64, 3])
-    x_train = x_train/255.0
-    x_test = x_test/255.0
-    y_train = to_categorical(y_train)
+def train():
+    FILE_MODLE = "model_CNN"
+    if os.path.isfile(FILE_MODLE):
+        model = models.load_model(FILE_MODLE)
+    else:
+        dataPath = "./flowers"
+        labels, images_data, typeFlowers = readData(dataPath=dataPath)
+        
+        x_train, x_test, y_train, y_test = train_test_split(images_data, labels, test_size=0.25)
+        x_train = np.reshape(x_train, [-1, 64, 64, 3])
+        x_train = x_train/255.0
+        x_test = np.reshape(x_test, [-1, 64, 64, 3])
+        x_test = x_test/255.0
+        y_train = to_categorical(y_train)
 
-    model = buildModel(x_train=x_train, y_train=y_train, batch_size=128, epochs=30)
-    y_pred = np.argmax(model.predict(x_test), axis=1)
+        model = buildModel(typeFlowers=typeFlowers, x_train=x_train, y_train=y_train, batch_size=128, epochs=30)
+        y_pred = np.argmax(model.predict(x_test), axis=1)
 
-    print(classification_report(y_test, y_pred, target_names=typeFlowers))
+        print(classification_report(y_test, y_pred, target_names=typeFlowers))
+    return model
 
 if __name__ == '__main__':
-    main()
+    model = train()
+    for idx, type_flower in enumerate(os.listdir("./flowers")):
+        print(idx, type_flower)
+    
+    path = "./flowers/dandelion/33876197394_c7a9487a9f_n.jpg"
+    img = image.img_to_array(image.load_img(path, target_size = (64, 64)))
+    x_test = np.reshape(img, [-1, 64, 64, 3])
+    x_test = x_test/255.0
+    
+    print(np.argmax(model.predict(x_test), axis=1))
