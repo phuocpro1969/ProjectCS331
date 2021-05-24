@@ -43,7 +43,7 @@ def buildModel(typeFlowers, x_train, y_train, batch_size=8, epochs=8):
     model.compile(loss = 'categorical_crossentropy', optimizer = 'adam', metrics = ['accuracy'])
     model.summary()
     
-    model.fit(x_train, y_train, batch_size = batch_size, epochs = epochs)
+    model.fit(x_train, y_train, batch_size = batch_size, epochs = epochs, validation_split=0.1)
     model.save(FILE_MODLE)
     
     return model

@@ -43,7 +43,7 @@ def buildModel(typeFlowers, x_train, y_train, batch_size=8, epochs=8):
     model.compile(loss = 'categorical_crossentropy', optimizer = 'adam', metrics = ['accuracy'])
     model.summary()
         
-    model.fit(x_train, y_train, batch_size = batch_size, epochs = epochs)
+    model.fit(x_train, y_train, batch_size = batch_size, epochs = epochs, validation_split=0.1)
     model.save(FILE_MODLE)
     
     return model
@@ -74,7 +74,7 @@ if __name__ == '__main__':
     for idx, type_flower in enumerate(os.listdir("./flowers")):
         print(idx, type_flower)
     
-    path = "./flowers/dandelion/33876197394_c7a9487a9f_n.jpg"
+    path = "./flowers/sunflower/164671753_ab36d9cbb7_n.jpg"
     img = image.img_to_array(image.load_img(path, target_size = (64, 64)))
     x_test = np.reshape(img, [-1, 64, 64, 3])
     x_test = x_test/255.0
